@@ -1,3 +1,4 @@
+
 #include <string.h>
 #include <time.h>
 #include <stdio.h>
@@ -108,7 +109,7 @@ double* gaussJordanInverse(double *matrix, int n) {
     int num_threads;
     printf("Enter number of threads: ");
     scanf("%d", &num_threads);
-    
+   
      omp_set_num_threads(num_threads);
 
     double *augmented = (double *)malloc(n * 2 * n * sizeof(double));
@@ -351,8 +352,6 @@ int seidel_p(double A[], double b[], double x[], int n)
 
 int seidel_s(double A[], double b[], double x[], int n)
 {
-    double *dx;
-    dx = (double*) calloc(n,sizeof(double));
     int i,j,k;
     double dxi;
     double epsilon = 1.0e-4;
@@ -586,7 +585,7 @@ void initialize_matrices(float*** a, float*** l, float*** u, int size) {
     *a = (float**) malloc(size * sizeof(float*));
     *l = (float**) malloc(size * sizeof(float*));
     *u = (float**) malloc(size * sizeof(float*));
-    
+   
     // Allocate memory for each row of the matrices
     #pragma omp parallel for
     for (int i = 0; i < size; ++i) {
@@ -637,7 +636,7 @@ void random_fill(float** matrix, int size) {
     for (int i = 0; i < size; ++i) {
         check[i] = (float*) malloc(size * sizeof(float));
     }
-    
+   
     a2 = a;
     l2 = l;
     u2 = u;
@@ -676,9 +675,9 @@ void random_fill(float** matrix, int size) {
     }
 
     if (error == 1) {
-        printf("Failed\n");
+        printf("Validation of matrix multiplication: Failed\n");
     } else {
-        printf("Success\n");
+        printf("Validation of matrix multiplication: Success\n");
     }
 
     // Free memory allocated for the matrices
@@ -692,50 +691,56 @@ void random_fill(float** matrix, int size) {
 }
 
 
-int main() {
 
+ 
+ int main() {
     int n;
     printf("Enter matrix size: ");
     scanf("%d", &n);
-  // Allocate memory for LU Decomposition
+
+    // Allocate memory for LU Decomposition
     float **a, **l, **u;
     initialize_matrices(&a, &l, &u, n);
     random_fill(a, n);
 
-    printf("\nLU Decomposition:\n");
+    printf("\n1. LU Decomposition:\n");
     double td = omp_get_wtime();
     l_u_d_s(a, l, u, n);
     td = omp_get_wtime() - td;
 
-
-    initialize_matrices(&a, &l, &u, n);
-    random_fill(a, n);
+    float **a2, **l2, **u2;
+    initialize_matrices(&a2, &l2, &u2, n);
+    random_fill(a2, n);
 
     double td1 = omp_get_wtime();
-    l_u_d_p(a, l, u, n);
+    l_u_d_p(a2, l2, u2, n);
     td1 = omp_get_wtime() - td1;
 
-    printf("\n\tTime for serial execution (LU Decomposition): %0.30f\n", td);
-    printf("\tTime for parallel execution (LU Decomposition): %0.30f\n", td1);
+    printf("\nTime for serial execution (LU Decomposition): %0.30f\n", td);
+    printf("Time for parallel execution (LU Decomposition): %0.30f\n", td1);
 
-    // Validate LU Decomposition results (if applicable)
+    // Validate LU Decomposition results (if applicable) for serial
     #ifdef VALIDATION
     matrix_validation(a, l, u, n);
     #endif
 
-    // Allocate memory for the single-pointer matrix
+    // Allocate memory for the single-pointer matrix and check if allocation is successful
     double *matrix = (double *)malloc(n * n * sizeof(double));
     double *b = malloc(sizeof(double) * n);
     double *x = malloc(sizeof(double) * n);
 
+    if (!matrix || !b || !x) {
+        printf("Memory allocation failed!\n");
+        exit(1);  // Exit the program if memory allocation fails
+    }
+
+    // Initialize matrices with random values
     for (int i = 0; i < (n * n); i++) {
-        double val = (rand() / (double)RAND_MAX);
-        matrix[i] = val;
+        matrix[i] = (rand() / (double)RAND_MAX);
     }
 
     for (int i = 0; i < n; i++) {
-        double val = (rand() / (double)RAND_MAX);
-        b[i] = val;
+        b[i] = (rand() / (double)RAND_MAX);
     }
 
     // Allocate additional matrices for different computations
@@ -743,50 +748,49 @@ int main() {
     double *b2 = malloc(sizeof(double) * n);
     double *x2 = malloc(sizeof(double) * n);
 
+    double *matrix3 = malloc(sizeof(double) * n * n);
+    double *b3 = malloc(sizeof(double) * n);
+    double *x3 = malloc(sizeof(double) * n);
+
+    double *matrix4 = malloc(sizeof(double) * n * n);
+    double *b4 = malloc(sizeof(double) * n);
+    double *x4 = malloc(sizeof(double) * n);
+
+    double *matrix5 = malloc(sizeof(double) * n * n);
+    double *b5 = malloc(sizeof(double) * n);
+    double *x5 = malloc(sizeof(double) * n);
+
+    double *matrix6 = malloc(sizeof(double) * n * n);
+    double *b6 = malloc(sizeof(double) * n);
+    double *x6 = malloc(sizeof(double) * n);
+
+    double *matrix7 = malloc(sizeof(double) * n * n);
+    double *matrix8 = malloc(sizeof(double) * n * n);
+
+    // Check if any memory allocation failed
+    if (!matrix2 || !b2 || !x2 || !matrix3 || !b3 || !x3 || !matrix4 || !b4 || !x4 || !matrix5 || !b5 || !x5 || !matrix6 || !b6 || !x6 || !matrix7 || !matrix8) {
+        printf("Memory allocation failed!\n");
+        exit(1);
+    }
+
+    // Copy data to new matrices
     memcpy(matrix2, matrix, sizeof(double) * n * n);
     memcpy(b2, b, sizeof(double) * n);
-
-    double *matrix3 = malloc(sizeof(double)*n*n);
-    double *b3 = malloc(sizeof(double)*n);
-    double *x3 = malloc(sizeof(double)*n);
 
     memcpy(matrix3, matrix, sizeof(double) * n * n);
     memcpy(b3, b, sizeof(double) * n);
 
-    double *matrix4 = malloc(sizeof(double)*n*n);
-    double *b4 = malloc(sizeof(double)*n);
-    double *x4 = malloc(sizeof(double)*n);
-
     memcpy(matrix4, matrix, sizeof(double) * n * n);
     memcpy(b4, b, sizeof(double) * n);
-
-    double *matrix5 = malloc(sizeof(double)*n*n);
-    double *b5 = malloc(sizeof(double)*n);
-    double *x5 = malloc(sizeof(double)*n);
 
     memcpy(matrix5, matrix, sizeof(double) * n * n);
     memcpy(b5, b, sizeof(double) * n);
 
-    double *matrix6 = malloc(sizeof(double)*n*n);
-    double *b6 = malloc(sizeof(double)*n);
-    double *x6 = malloc(sizeof(double)*n);
-
     memcpy(matrix6, matrix, sizeof(double) * n * n);
     memcpy(b6, b, sizeof(double) * n);
 
-    double *matrix7 = malloc(sizeof(double)*n*n);
-    double *b7 = malloc(sizeof(double)*n);
-    double *x7 = malloc(sizeof(double)*n);
-
     memcpy(matrix7, matrix, sizeof(double) * n * n);
-    memcpy(b7, b, sizeof(double) * n);
-
-    double *matrix8 = malloc(sizeof(double)*n*n);
-    double *b8 = malloc(sizeof(double)*n);
-    double *x8 = malloc(sizeof(double)*n);
-
     memcpy(matrix8, matrix, sizeof(double) * n * n);
-    memcpy(b8, b, sizeof(double) * n);
 
     // Time tracking variables
     double total_serial_time = 0.0;
@@ -794,71 +798,64 @@ int main() {
 
     // Gauss Serial
     double start_time = omp_get_wtime();
-    double *inverse = gaussJordanInverseSerial(matrix, n);
+    double *inverse = gaussJordanInverseSerial(matrix7, n);
     double end_time = omp_get_wtime();
     total_serial_time += (end_time - start_time);
-    printf("\tA. Serial:\n");
-    printf("\nExecution Time: %f seconds\n", end_time - start_time);
+    printf("\n2. Gauss-Jordan Inversion:\n");
+    printf("\nTime for serial execution (Gauss-Jordan Inversion): %f seconds\n", end_time - start_time);
 
     // Gauss Parallel
     omp_set_num_threads(1);
     start_time = omp_get_wtime();
-    inverse = gaussJordanInverse(matrix2, n);
+    inverse = gaussJordanInverse(matrix8, n);
     end_time = omp_get_wtime();
     total_parallel_time += (end_time - start_time);
-    printf("\tB. Parallel:\n");
-    printf("\nExecution Time for Gauss-Jordan Inversion: %f seconds\n", end_time - start_time);
+    printf("\nTime for parallel execution (Gauss-Jordan Inversion): %f seconds\n", end_time - start_time);
 
     // Back Substitution
-    printf("\n1. Back Substitution:\n");
-    printf("\tA. Serial:\n");
+    printf("\n3. Back Substitution:\n");
     double ta = omp_get_wtime();
     backsubstitution_s(matrix, b, x, n);
     ta = omp_get_wtime() - ta;
     total_serial_time += ta;
 
-    printf("\tB. Parallel:\n");
     double ta1 = omp_get_wtime();
     backsubstitution_p(matrix2, b2, x2, n);
     ta1 = omp_get_wtime() - ta1;
     total_parallel_time += ta1;
 
-    printf("\n\tTime for serial execution: %0.30f\n", ta);
-    printf("\tTime for parallel execution: %0.30f\n", ta1);
+    printf("\nTime for serial execution ( Back Substitution): %0.30f\n", ta);
+    printf("Time for parallel execution (Back Substitution): %0.30f\n", ta1);
 
     // Conjugate Gradient
-    printf("\n 2. Conjugate Gradient: \n");
-    printf("\t A. Serial: \n");
+    printf("\n4. Conjugate Gradient: \n");
     double tb = omp_get_wtime();
     conjugategradient_s(matrix3, b3, x3, n);
     tb = omp_get_wtime() - tb;
     total_serial_time += tb;
 
-    printf("\t B. Parallel: \n");
     double tb1 = omp_get_wtime();
     conjugategradient_p(matrix4, b4, x4, n);
     tb1 = omp_get_wtime() - tb1;
     total_parallel_time += tb1;
 
-    printf("\n\t Time for serial execution: %0.30f\n\n", tb);
-    printf("\n\t Time for parallel execution: %0.30f\n\n", tb1);
+    printf("\nTime for serial execution (Conjugate Gradient): %0.30f\n", tb);
+    printf("Time for parallel execution (Conjugate Gradient): %0.30f\n", tb1);
 
     // Gauss Seidel
-    printf("\n 3. Gauss Seidel: \n");
-    printf("\t A. Serial: \n");
+    printf("\n5. Gauss Seidel: \n");
     double tc = omp_get_wtime();
     seidel_s(matrix6, b6, x6, n);
     tc = omp_get_wtime() - tc;
     total_serial_time += tc;
 
-    printf("\t B. Parallel: \n");
     double tc1 = omp_get_wtime();
     seidel_p(matrix5, b5, x5, n);
     tc1 = omp_get_wtime() - tc1;
     total_parallel_time += tc1;
 
-    printf("\n\t Time for serial execution: %0.30f\n\n", tc);
-    printf("\n\t Time for parallel execution: %0.30f\n\n", tc1);
+    printf("\nTime for serial execution (Gauss Seidel): %0.30f\n", tc);
+    printf("Time for parallel execution (Gauss Seidel): %0.30f\n", tc1);
 
     // Print total execution times
     printf("\nTotal Serial Execution Time: %f seconds\n", total_serial_time);
@@ -885,12 +882,9 @@ int main() {
     free(b6);
     free(x6);
     free(matrix7);
-    free(b7);
-    free(x7);
     free(matrix8);
-    free(b8);
-    free(x8);
-     // Free LU Decomposition memory
+
+    // Free LU Decomposition memory
     for (int i = 0; i < n; i++) {
         free(a[i]);
         free(l[i]);
@@ -899,4 +893,15 @@ int main() {
     free(a);
     free(l);
     free(u);
+    
+        // Free LU Decomposition memory
+    for (int i = 0; i < n; i++) {
+        free(a2[i]);
+        free(l2[i]);
+        free(u2[i]);
+    }
+    free(a2);
+    free(l2);
+    free(u2);
+
 }
